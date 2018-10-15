@@ -100,9 +100,10 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
                 return
             }
             
-            cell.posterImage.image = nil
-            if(cell.tag == indexPath.row) {
-                cell.posterImage.image = UIImage(data: imageData)
+            DispatchQueue.main.async {
+                if(cell.tag == indexPath.row) {
+                    cell.posterImage.image = UIImage(data: imageData)
+                }
             }
         })
         
