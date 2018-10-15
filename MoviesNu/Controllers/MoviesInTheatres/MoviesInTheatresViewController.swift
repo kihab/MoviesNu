@@ -80,32 +80,36 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
         guard let count = moviesList?.count else {
             return 0
         }
+        
         return count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Constants.moviesViewCellIdentifier, for: indexPath) as! MoviesCollectionViewCell
+        cell.tag = indexPath.row
         
         guard let movies = moviesList,
             let posterPath = movies[indexPath.row].poster_path else {
             return cell
-                
         }
         
         presenter?.getMoviePoster(posterPath: posterPath, completionBlock: { (data, error) in
-            
             guard let imageData = data, error == nil else {
                 print(Constants.moviePosterError)
                 return
             }
-            cell.posterImage.image = UIImage(data: imageData)
+            
+            cell.posterImage.image = nil
+            if(cell.tag == indexPath.row) {
+                cell.posterImage.image = UIImage(data: imageData)
+            }
         })
+        
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        
         guard let movies = moviesList,
         let moviesPresenter = presenter else {
             return
@@ -120,7 +124,6 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
             } else {
                 moviesPresenter.getMoviesWith(pageNumber: pageNumber)
             }
-            
         }
     }
 }
