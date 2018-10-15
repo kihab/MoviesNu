@@ -9,14 +9,14 @@
 import UIKit
 
 typealias nowPlayingMoviesCompletionBlock = (_ movies:[Movie]?, _ error: Error?) -> Void
-typealias moviePosterCompletionBlock = (_ imageData:Data?, _ error: Error?) -> Void
+typealias movieImageCompletionBlock = (_ imageData:Data?, _ error: Error?) -> Void
 
 
 protocol MoviesServiceProtocol {
     
-    func getNowPlayingMoviesWith(completionBlock: @escaping nowPlayingMoviesCompletionBlock)
-    
-    func getMoviePosterWith(_ posterPath: String, completionBlock:  @escaping moviePosterCompletionBlock)
+    func getNowPlayingMoviesWith(pageNumber page:Int, andCompletionBlock completion: @escaping nowPlayingMoviesCompletionBlock)
+    func getMoviePosterWith(_ posterPath: String, completionBlock:  @escaping movieImageCompletionBlock)
+    func getMovieBackdropWith(_ backdropPath: String, completionBlock:  @escaping movieImageCompletionBlock)
 }
 
 class MoviesService: MoviesServiceProtocol {
@@ -27,10 +27,9 @@ class MoviesService: MoviesServiceProtocol {
         self.urlFomatter = urlFormatter
     }
     
-    func getNowPlayingMoviesWith(completionBlock: @escaping nowPlayingMoviesCompletionBlock) {
-        
+    func getNowPlayingMoviesWith(pageNumber page:Int, andCompletionBlock completion: @escaping nowPlayingMoviesCompletionBlock) {
         guard let formatter = self.urlFomatter,
-        let url = URL(string: formatter.getNowPlayingMoviesURL()) else {
+        let url = URL(string: formatter.getNowPlayingMoviesURLWith(pageNumber: page)) else {
             print(Constants.nowPlayingMoviesURLError)
             return
         }
@@ -38,7 +37,7 @@ class MoviesService: MoviesServiceProtocol {
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             if error != nil {
                 print(error!.localizedDescription)
-                completionBlock(nil, error)
+                completion(nil, error)
             }
             
             guard let data = data else { return }
@@ -47,7 +46,7 @@ class MoviesService: MoviesServiceProtocol {
                 let nowPlayingResponse = try JSONDecoder().decode(NowPlaying.self, from: data)
                 let movies = nowPlayingResponse.results
                 if (movies.count > 0) {
-                    completionBlock(movies, nil)
+                    completion(movies, nil)
                 } else {
                     print(Constants.noMoviesFound)
                 }
@@ -55,14 +54,13 @@ class MoviesService: MoviesServiceProtocol {
                 
             } catch let jsonError {
                 print(jsonError)
-                completionBlock(nil, jsonError)
+                completion(nil, jsonError)
             }
             
             }.resume()
     }
     
-    func getMoviePosterWith(_ posterPath: String, completionBlock: @escaping moviePosterCompletionBlock) {
-        
+    func getMoviePosterWith(_ posterPath: String, completionBlock: @escaping movieImageCompletionBlock) {
         guard let formatter = self.urlFomatter else {
             print(Constants.moviePosterError)
             return
@@ -70,6 +68,26 @@ class MoviesService: MoviesServiceProtocol {
         
         let posterURLImage = formatter.getMoviePosterURL(posterId: posterPath)
         guard let url = URL(string: posterURLImage) else {
+            print(Constants.moviePosterError)
+            return
+        }
+        
+        DispatchQueue.global().async {
+            let data = try? Data(contentsOf: url)
+            DispatchQueue.main.async {
+                completionBlock(data, nil)
+            }
+        }
+    }
+    
+    func getMovieBackdropWith(_ backdropPath: String, completionBlock:  @escaping movieImageCompletionBlock) {
+        guard let formatter = self.urlFomatter else {
+            print(Constants.moviePosterError)
+            return
+        }
+        
+        let backdropURLImage = formatter.getMovieBackdropImageURL(backdroId: backdropPath)
+        guard let url = URL(string: backdropURLImage) else {
             print(Constants.moviePosterError)
             return
         }

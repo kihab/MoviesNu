@@ -9,9 +9,8 @@
 import UIKit
 
 protocol MoviesInTheatresPresenterProtocol {
-    
-    func getMovies()
-    func getMoviePoster(posterPath: String, completionBlock: @escaping moviePosterCompletionBlock)
+    func getMoviesWith(pageNumber page:Int)
+    func getMoviePoster(posterPath: String, completionBlock: @escaping movieImageCompletionBlock)
 }
 
 class MoviesInTheatresPresenter: MoviesInTheatresPresenterProtocol {
@@ -24,8 +23,8 @@ class MoviesInTheatresPresenter: MoviesInTheatresPresenterProtocol {
         service = moviesService
     }
     
-    func getMovies() {
-        service.getNowPlayingMoviesWith { (movies, error) in
+    func getMoviesWith(pageNumber page:Int) {
+        service.getNowPlayingMoviesWith(pageNumber: page) { (movies, error) in
             guard let moviesNowPlaying = movies, error == nil else {
                 print("\(Constants.showMoviesError): \(error?.localizedDescription ?? "ERROR")")
                 return
@@ -37,7 +36,7 @@ class MoviesInTheatresPresenter: MoviesInTheatresPresenterProtocol {
         }
     }
     
-    func getMoviePoster(posterPath: String, completionBlock: @escaping moviePosterCompletionBlock) {        
+    func getMoviePoster(posterPath: String, completionBlock: @escaping movieImageCompletionBlock) {        
         service.getMoviePosterWith(posterPath) { (data, error) in
             guard let imageData = data, error == nil  else {
                 print(Constants.moviePosterError)

@@ -8,26 +8,22 @@
 
 protocol URLFormatterProtocol {
     
-    func getNowPlayingMoviesURL() -> String
+    func getNowPlayingMoviesURLWith(pageNumber page:Int) -> String
     func getMoviePosterURL(posterId: String) -> String
     func getMovieBackdropImageURL(backdroId: String) -> String
 }
 
 class URLFormatter: URLFormatterProtocol {
-
-    func getNowPlayingMoviesURL() -> String{
-        
-        return "\(Constants.baseURL)movie/now_playing?api_key=\(Constants.apiKey)&page=1"
+    
+    func getNowPlayingMoviesURLWith(pageNumber page: Int) -> String {
+        return "\(Constants.baseURL)movie/now_playing?api_key=\(Constants.apiKey)&page=\(String(page))"
     }
     
     func getMoviePosterURL(posterId: String) -> String {
-        
         return "https://image.tmdb.org/t/p/w200\(posterId)"
     }
     
     func getMovieBackdropImageURL(backdroId: String) -> String {
-        //
-        return ""
+        return "https://image.tmdb.org/t/p/w400\(backdroId)"
     }
-
 }

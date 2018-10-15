@@ -9,7 +9,6 @@
 import UIKit
 
 protocol  MoviesInTheatresViewControllerProtocol: class {
-    
     func populateMoviesViewWith(movies:[Movie])
 }
 
@@ -21,19 +20,21 @@ class MoviesInTheatresViewController: UIViewController {
     var moviesInTheatresList:[Movie]?
     var presenter: MoviesInTheatresPresenterProtocol?
     var selectedMovie: Movie?
+    var pageNumber = 1
+    var loadingMovies = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.navigationItem.title = Constants.moviesInTheatresViewControllerTitle
-
+        
         let moviesService = MoviesService(urlFormatter: URLFormatter())
         presenter = MoviesInTheatresPresenter(viewController: self, moviesService: moviesService)
         guard let presenter = self.presenter else {
             print(Constants.showMoviesError)
             return
         }
-        presenter.getMovies()
+        presenter.getMoviesWith(pageNumber: pageNumber)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -47,17 +48,16 @@ class MoviesInTheatresViewController: UIViewController {
     }
 }
 
-
 extension MoviesInTheatresViewController: MoviesInTheatresViewControllerProtocol {
     
     func populateMoviesViewWith(movies: [Movie]) {
-        
         if moviesInTheatresList == nil {
             moviesInTheatresList = movies
         } else {
             moviesInTheatresList?.append(contentsOf: movies)
         }        
         moviesCollectionView.reloadData()
+        loadingMovies = false
     }
 }
 
@@ -80,12 +80,15 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Constants.moviesViewCellIdentifier, for: indexPath) as! MoviesCollectionViewCell
+        
         guard let movies = moviesInTheatresList,
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Constants.moviesViewCellIdentifier, for: indexPath) as? MoviesCollectionViewCell else {
-            return UICollectionViewCell()
+            let posterPath = movies[indexPath.row].poster_path else {
+            return cell
+                
         }
         
-        presenter?.getMoviePoster(posterPath: movies[indexPath.row].poster_path, completionBlock: { (data, error) in
+        presenter?.getMoviePoster(posterPath: posterPath, completionBlock: { (data, error) in
             
             guard let imageData = data, error == nil else {
                 print(Constants.moviePosterError)
@@ -93,8 +96,22 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
             }
             cell.posterImage.image = UIImage(data: imageData)
         })
-        
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        
+        guard let movies = moviesInTheatresList,
+        let moviesPresenter = presenter else {
+            return
+        }
+        
+        let lastElement = movies.count - 1
+        if (!loadingMovies && indexPath.row == lastElement) {
+            pageNumber += 1
+            loadingMovies = true
+            moviesPresenter.getMoviesWith(pageNumber: pageNumber)
+        }
     }
 }
 
