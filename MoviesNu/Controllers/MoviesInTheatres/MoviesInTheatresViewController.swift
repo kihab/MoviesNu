@@ -9,7 +9,9 @@
 import UIKit
 
 protocol  MoviesInTheatresViewControllerProtocol: class {
+
     func populateMoviesViewWith(movies:[Movie])
+    var moviesList:[Movie]? {get set}
 }
 
 class MoviesInTheatresViewController: UIViewController {
