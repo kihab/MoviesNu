@@ -25,8 +25,9 @@ class MoviesInTheatresPresenter: MoviesInTheatresPresenterProtocol {
     }
     
     func getMoviesWith(pageNumber page:Int) {
-        service.getNowPlayingMoviesWith(pageNumber: page) { (movies, error) in
-            guard let moviesNowPlaying = movies, error == nil else {
+        service.getNowPlayingMoviesWith(pageNumber: page) { [weak self] (movies, error) in
+            guard let moviesNowPlaying = movies,
+                error == nil else {
                 print("\(Constants.showMoviesError): \(error?.localizedDescription ?? "ERROR")")
                 return
             }

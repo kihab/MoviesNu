@@ -28,7 +28,9 @@ class MoviesServiceMock: MoviesServiceProtocol {
         completion(list, nil)
     }
     
-    func getMoviePosterWith(_ posterPath: String, completionBlock: @escaping movieImageCompletionBlock) {}
+    func getMoviePosterWith(_ posterPath: String, completionBlock: @escaping movieImageCompletionBlock) {
+        completionBlock(Data(), nil)
+    }
     
     func getMovieBackdropWith(_ backdropPath: String, completionBlock: @escaping movieImageCompletionBlock) {}
     
@@ -55,10 +57,9 @@ class MoviesInTheatresPresenterTests: XCTestCase {
         presenter = nil
     }
     
-    func getMoviePoster() {
-        presenter.getMoviesWith(pageNumber: 1)
-        waitForExpectations(timeout: 2, handler: nil)
-        XCTAssertNotNil(presenter.viewController?.moviesList)
+    func testgetMoviePoster() {
+        presenter.getMoviePoster(posterPath: "") { (data, error) in
+            XCTAssertNotNil(data)
+        }
     }
-    
 }

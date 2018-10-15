@@ -15,7 +15,6 @@ class MoviesServiceTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        
     }
     
     //Asynchronus Tests
