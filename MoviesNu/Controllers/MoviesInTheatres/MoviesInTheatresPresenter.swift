@@ -11,6 +11,7 @@ import UIKit
 protocol MoviesInTheatresPresenterProtocol {
     func getMoviesWith(pageNumber page:Int)
     func getMoviePoster(posterPath: String, completionBlock: @escaping movieImageCompletionBlock)
+    func searchForMoviesWith(searchQuery query:String, pageNumber page:Int)
 }
 
 class MoviesInTheatresPresenter: MoviesInTheatresPresenterProtocol {
@@ -43,6 +44,20 @@ class MoviesInTheatresPresenter: MoviesInTheatresPresenterProtocol {
                 return
             }
             completionBlock(imageData, nil)
+        }
+    }
+    
+    func searchForMoviesWith(searchQuery query:String, pageNumber page:Int) {
+        service.getSearchResultsMoviesWith(searchQuery: query, PageNumber: page) { (movies, error) in
+            guard let searchResults = movies, error == nil else {
+                print("\(Constants.moviesSearchError): \(error?.localizedDescription ?? "ERROR")")
+                return
+            }
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.viewController?.populateMoviesViewWith(movies: searchResults)
+            }
+
         }
     }
 }

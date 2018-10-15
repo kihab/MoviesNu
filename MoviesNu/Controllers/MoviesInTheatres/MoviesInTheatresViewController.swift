@@ -17,11 +17,14 @@ class MoviesInTheatresViewController: UIViewController {
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var moviesCollectionView: UICollectionView!
     
-    var moviesInTheatresList:[Movie]?
+    var moviesList:[Movie]?
+    var searchResultsList:[Movie]?
     var presenter: MoviesInTheatresPresenterProtocol?
     var selectedMovie: Movie?
     var pageNumber = 1
     var loadingMovies = false
+    var searchIsActive = false
+    var searchQuery = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,11 +54,11 @@ class MoviesInTheatresViewController: UIViewController {
 extension MoviesInTheatresViewController: MoviesInTheatresViewControllerProtocol {
     
     func populateMoviesViewWith(movies: [Movie]) {
-        if moviesInTheatresList == nil {
-            moviesInTheatresList = movies
+        if moviesList == nil {
+            moviesList = movies
         } else {
-            moviesInTheatresList?.append(contentsOf: movies)
-        }        
+            moviesList?.append(contentsOf: movies)
+        }
         moviesCollectionView.reloadData()
         loadingMovies = false
     }
@@ -72,7 +75,7 @@ extension MoviesInTheatresViewController: UICollectionViewDelegateFlowLayout {
 extension MoviesInTheatresViewController: UICollectionViewDataSource {
  
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        guard let count = moviesInTheatresList?.count else {
+        guard let count = moviesList?.count else {
             return 0
         }
         return count
@@ -82,7 +85,7 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
         
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Constants.moviesViewCellIdentifier, for: indexPath) as! MoviesCollectionViewCell
         
-        guard let movies = moviesInTheatresList,
+        guard let movies = moviesList,
             let posterPath = movies[indexPath.row].poster_path else {
             return cell
                 
@@ -101,7 +104,7 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         
-        guard let movies = moviesInTheatresList,
+        guard let movies = moviesList,
         let moviesPresenter = presenter else {
             return
         }
@@ -110,7 +113,12 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
         if (!loadingMovies && indexPath.row == lastElement) {
             pageNumber += 1
             loadingMovies = true
-            moviesPresenter.getMoviesWith(pageNumber: pageNumber)
+            if (searchIsActive) {
+                moviesPresenter.searchForMoviesWith(searchQuery: searchQuery, pageNumber: pageNumber)
+            } else {
+                moviesPresenter.getMoviesWith(pageNumber: pageNumber)
+            }
+            
         }
     }
 }
@@ -118,10 +126,35 @@ extension MoviesInTheatresViewController: UICollectionViewDataSource {
 extension MoviesInTheatresViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard let movies = moviesInTheatresList else {
+        guard let movies = moviesList else {
             return
         }
         selectedMovie = movies[indexPath.row]
         performSegue(withIdentifier: Constants.showMovieDetailsSegue, sender: self)
+    }
+}
+
+extension MoviesInTheatresViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        moviesList = nil
+        pageNumber = 1
+        searchQuery = searchText
+        presenter?.searchForMoviesWith(searchQuery: searchText, pageNumber: pageNumber)
+        searchIsActive = true
+    }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        self.searchBar.showsCancelButton = true
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        moviesList = nil
+        searchBar.showsCancelButton = false
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        searchIsActive = false
+        pageNumber = 1
+        presenter?.getMoviesWith(pageNumber: pageNumber)
     }
 }

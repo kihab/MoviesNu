@@ -7,7 +7,7 @@
 //
 
 
-struct NowPlaying: Decodable {
+struct MoviesResponse: Decodable {
     let results: [Movie]
 }
 

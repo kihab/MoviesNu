@@ -26,6 +26,7 @@ class Constants {
     static let noMoviesFound = "Couldn't found any movies"
     static let moviePosterError = "Can't get Movie poster"
     static let moviebackdropImageError = "Can't get Movie backdrop Image"
+    static let moviesSearchError = "Error while searching for a movies"
     
     //Movies URLs
     static let baseURL = "https://api.themoviedb.org/3/"
